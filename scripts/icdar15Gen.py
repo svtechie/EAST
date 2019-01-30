@@ -1,0 +1,1 @@
+downloads/script/icdar15Gen.py
