@@ -40,14 +40,30 @@ tf.app.flags.DEFINE_string('geometry', 'RBOX',
 FLAGS = tf.app.flags.FLAGS
 im_fn = ''
 
+basePath = ["downloads/icdar-training15/",
+            "downloads/icdar-training13/"
+           ]
+
+def find_file(filename) :
+    for path in basePath:
+        file = path + "/" + filename
+        if os.path.isfile(file) :
+            return 1, file
+
+    return 0, filename
+
+def dim(a):
+    if not type(a) == list:
+        return []
+    return [len(a)] + dim(a[0])
 
 def get_images():
     files = []
     for ext in ['jpg', 'png', 'jpeg', 'JPG']:
-        files.extend(glob.glob(
-            os.path.join(FLAGS.training_data_path, '*.{}'.format(ext))))
+        for path in basePath :
+            files.extend(glob.glob(
+                os.path.join(path, '*.{}'.format(ext))))
     return files
-
 
 def load_annoataion(p):
     '''
@@ -640,9 +656,14 @@ def generator(input_size=512, batch_size=32,
                 # print im_fn
                 h, w, _ = im.shape
                 txt_fn = im_fn.replace(os.path.basename(im_fn).split('.')[1], 'txt')
+                txt_fn2 = os.path.join(os.path.dirname(txt_fn), "gt_" + os.path.basename(txt_fn) + "15")
                 if not os.path.exists(txt_fn):
-                    print('text file {} does not exists'.format(txt_fn))
-                    continue
+                    if os.path.exists(txt_fn2) :
+                        txt_fn = txt_fn2
+                    else :
+                        print('text file {} does not exists'.format(txt_fn))
+                        print('text file {} does not exists'.format(txt_fn2))
+                        continue
 
                 text_polys, text_tags, text_labels = load_annoataion(txt_fn)
 

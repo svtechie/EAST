@@ -15,7 +15,7 @@ from imutils import perspective
 
 import tensorflow as tf
 
-tf.app.flags.DEFINE_string('training_data_path', 'downloads/icdar-training15/',
+tf.app.flags.DEFINE_string('training_data_path', 'downloads/hmsi_data01/',
                            'training dataset to use')
 tf.app.flags.DEFINE_integer('max_image_large_side', 1280,
                             'max image size of training')
@@ -594,4 +594,4 @@ def derivGen(input_size=512, batch_size=32,
 
 
 if __name__ == '__main__':
-    data_generator = derivGen(input_size=512, batch_size=1000)
+    data_generator = derivGen(input_size=512, batch_size=10)
