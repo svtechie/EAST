@@ -25,6 +25,7 @@ def handleFile(p):
     with open(p, 'r') as f:
         for l in f:
             # Split
+            l = l.replace('\n', '')
             line1 = l.split()
             line2 = l.split(', ')
             if len(line2) >= 5 :

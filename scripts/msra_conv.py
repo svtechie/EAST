@@ -46,8 +46,8 @@ def rec_rotate(x, y, width, height, theta):
 
     x1, y1 = xy_rorate(theta, x, y, centerx, centery)
     x2, y2 = xy_rorate(theta, x + width, y, centerx, centery)
-    x3, y3 = xy_rorate(theta, x, y + height, centerx, centery)
-    x4, y4 = xy_rorate(theta, x + width, y + height, centerx, centery)
+    x3, y3 = xy_rorate(theta, x + width, y + height, centerx, centery)
+    x4, y4 = xy_rorate(theta, x, y + height, centerx, centery)
 
     return [x1, y1, x2, y2, x3, y3, x4, y4]
 

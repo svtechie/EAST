@@ -3,7 +3,7 @@ import glob
 import csv
 import cv2
 import time
-import os
+import os, errno
 import numpy as np
 import scipy.optimize
 import matplotlib.pyplot as plt
@@ -38,10 +38,16 @@ tf.app.flags.DEFINE_string('geometry', 'RBOX',
 
 
 FLAGS = tf.app.flags.FLAGS
+genImages = False
 im_fn = ''
 
-basePath = ["downloads/icdar-training15/",
-            "downloads/icdar-training13/"
+basePath = [#"downloads/icdar-training15/",
+            #"downloads/icdar-training13/",
+            #"downloads/icdar-test15/",
+            #"downloads/icdar-test13/",
+            "downloads/hmsi_data01/",
+            "downloads/MSRA-TD500/train/",
+            "downloads/MSRA-TD500/test/"
            ]
 
 def find_file(filename) :
@@ -147,12 +153,12 @@ def check_and_validate_polys(polys, tags, xxx_todo_changeme, text_labels):
             print('invalid poly 1', im_fn)
             continue
         p_area = polygon_area(poly)
-        if abs(p_area) < 1:
+        if abs(p_area) < 0.5:
             # print poly
-            print('invalid poly')
+            print(im_fn, 'invalid poly')
             continue
         if p_area > 0:
-            print('poly in wrong direction')
+            print(im_fn, 'poly in wrong direction')
             poly = poly[(0, 3, 2, 1), :]
 
         validated_polys.append(poly)
@@ -642,7 +648,8 @@ def generator(input_size=512, batch_size=32,
     print('{} training images in {}'.format(
         image_list.shape[0], FLAGS.training_data_path))
     index = np.arange(0, image_list.shape[0])
-    while True:
+    count = 0
+    while (not genImages) or (count < batch_size):
         np.random.shuffle(index)
         images = []
         image_fns = []
@@ -656,14 +663,20 @@ def generator(input_size=512, batch_size=32,
                 # print im_fn
                 h, w, _ = im.shape
                 txt_fn = im_fn.replace(os.path.basename(im_fn).split('.')[1], 'txt')
+                txt_fn1 = os.path.join(os.path.dirname(txt_fn), "gt_" + os.path.basename(txt_fn))
                 txt_fn2 = os.path.join(os.path.dirname(txt_fn), "gt_" + os.path.basename(txt_fn) + "15")
-                if not os.path.exists(txt_fn):
-                    if os.path.exists(txt_fn2) :
-                        txt_fn = txt_fn2
-                    else :
-                        print('text file {} does not exists'.format(txt_fn))
-                        print('text file {} does not exists'.format(txt_fn2))
-                        continue
+                txt_fn3 = os.path.join(os.path.dirname(txt_fn), "txt", os.path.basename(txt_fn))
+                if os.path.exists(txt_fn2):
+                    txt_fn = txt_fn2
+                elif os.path.exists(txt_fn3) :
+                    txt_fn = txt_fn3
+                elif os.path.exists(txt_fn1) :
+                    txt_fn = txt_fn1
+                elif not os.path.exists(txt_fn) :
+                    print('text file {} does not exists'.format(txt_fn))
+                    print('text file {} does not exists'.format(txt_fn1))
+                    print('text file {} does not exists'.format(txt_fn2))
+                    continue
 
                 text_polys, text_tags, text_labels = load_annoataion(txt_fn)
 
@@ -694,10 +707,11 @@ def generator(input_size=512, batch_size=32,
                     im_padded[:new_h, :new_w, :] = im.copy()
                     im = cv2.resize(im_padded, dsize=(input_size, input_size))
                     #print ("after: ", im_fn, text_tags, text_labels)
-                    score_map = np.zeros((input_size, input_size), dtype=np.uint8)
-                    geo_map_channels = 5 if FLAGS.geometry == 'RBOX' else 8
-                    geo_map = np.zeros((input_size, input_size, geo_map_channels), dtype=np.float32)
-                    training_mask = np.ones((input_size, input_size), dtype=np.uint8)
+                    if not genImages :
+                        score_map = np.zeros((input_size, input_size), dtype=np.uint8)
+                        geo_map_channels = 5 if FLAGS.geometry == 'RBOX' else 8
+                        geo_map = np.zeros((input_size, input_size, geo_map_channels), dtype=np.float32)
+                        training_mask = np.ones((input_size, input_size), dtype=np.uint8)
                 else:
                     im, text_polys, text_tags, text_labels = crop_area(im, text_polys, text_tags, text_labels, crop_background=False)
                     if text_polys.shape[0] == 0:
@@ -721,8 +735,39 @@ def generator(input_size=512, batch_size=32,
                     text_polys[:, :, 1] *= resize_ratio_3_y
                     new_h, new_w, _ = im.shape
                     #print ("after: ", im_fn, text_tags, text_labels)
-                    score_map, geo_map, training_mask = generate_rbox((new_h, new_w), text_polys, text_tags, text_labels)
+                    if not genImages :
+                        score_map, geo_map, training_mask = generate_rbox((new_h, new_w), text_polys, text_tags, text_labels)
 
+                if genImages and (len(text_polys) != 0):
+                    base   = os.path.basename(im_fn)
+                    outdir = os.path.dirname(im_fn)
+
+                    (outdir0, outdir1) = os.path.split(outdir)
+                    outdir1 = "out_" + outdir1
+                    outdir = os.path.join(outdir0, outdir1)
+
+                    if not os.path.exists(outdir): 
+                        try:
+                            os.makedirs(outdir)
+                        except OSError as e:
+                            if e.errno != errno.EEXIST:
+                                raise
+
+                    filename = os.path.join(outdir, str(count) + "_" + base)
+                    print (filename)
+                    cv2.imwrite(filename, im)
+                    text_polys = np.round(text_polys, decimals=0).astype(np.int32)
+                    #print ("after: ", im_fn, text_polys, text_tags, text_labels)
+
+                    txtop = filename.replace(os.path.basename(filename).split('.')[1], 'txt')
+                    f = open(txtop, "w")
+                    for poly, label in zip(text_polys, text_labels):
+                        str1  = ','.join(str(int(item)) for innerlist in poly for item in innerlist)
+                        str1 += ',' + label
+                        f.write(str1 + "\n")
+                    f.close()
+
+                    count += 1
 
                 if vis:
                     fig, axs = plt.subplots(3, 2, figsize=(20, 30))
@@ -810,6 +855,9 @@ def get_batch(num_workers, **kwargs):
 
 
 if __name__ == '__main__':
-    data_generator = get_batch(num_workers=1, input_size=512, batch_size=1)
-    #for i in range(100) :
-    data = next(data_generator)
+    if genImages :
+        data_generator = generator(input_size=512, batch_size=10)
+    else :
+        data_generator = get_batch(num_workers=1, input_size=512, batch_size=1)
+        #for i in range(100) :
+        data = next(data_generator)
