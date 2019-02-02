@@ -41,13 +41,23 @@ FLAGS = tf.app.flags.FLAGS
 genImages = True
 im_fn = ''
 
-basePath = ["downloads/icdar-training15/",
-            "downloads/icdar-training13/",
-            "downloads/icdar-test15/",
-            "downloads/icdar-test13/",
-            "downloads/hmsi_data01/",
-            "downloads/MSRA-TD500/train/",
-            "downloads/MSRA-TD500/test/"
+#basePath = ["downloads/icdar-training15/",
+#            "downloads/icdar-training13/",
+#            "downloads/icdar-test15/",
+#            "downloads/icdar-test13/",
+#            "downloads/hmsi_data01/",
+#            "downloads/MSRA-TD500/train/",
+#            "downloads/MSRA-TD500/test/"
+#           ]
+
+basePath = [#"downloads/icdar/icdar-training15/",
+            #"downloads/icdar/icdar-test15/",
+            #"downloads/icdar/icdar-test13/",
+            #"downloads/icdar/icdar-training13/"#,
+            "downloads/hmsi_data01/"#,
+            #"downloads/coco/east_2014/",
+            #"downloads/MSRA-TD500/train/",
+            #"downloads/MSRA-TD500/test/"
            ]
 
 def find_file(filename) :
@@ -857,5 +867,5 @@ def get_batch(num_workers, **kwargs):
 
 if __name__ == '__main__':
     data_generator = get_batch(num_workers=1, input_size=512, batch_size=1)
-    for i in range(100) :
+    for i in range(300) :
         data = next(data_generator)

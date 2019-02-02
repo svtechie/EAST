@@ -4,9 +4,7 @@ import cv2
 
 def rotate(angle, x, y):
     """
-    基于原点的弧度旋转
-
-    :param angle:   弧度
+    :param angle:   
     :param x:       x
     :param y:       y
     :return:
@@ -18,8 +16,6 @@ def rotate(angle, x, y):
 
 def xy_rorate(theta, x, y, centerx, centery):
     """
-    针对中心点进行旋转
-
     :param theta:
     :param x:
     :param y:
@@ -33,7 +29,6 @@ def xy_rorate(theta, x, y, centerx, centery):
 
 def rec_rotate(x, y, width, height, theta):
     """
-    传入矩形的x,y和宽度高度，弧度，转成QUAD格式
     :param x:
     :param y:
     :param width:

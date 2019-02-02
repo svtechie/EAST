@@ -6,8 +6,8 @@ import os
 def get_texts():
     files = []
     for ext in ['txt']:
-        files.extend(glob.glob(os.path.join('downloads/icdar-training13', '*.{}'.format(ext))))
-        files.extend(glob.glob(os.path.join('downloads/icdar-test13', '*.{}'.format(ext))))
+        files.extend(glob.glob(os.path.join('downloads/icdar/icdar-training13', '*.{}'.format(ext))))
+        files.extend(glob.glob(os.path.join('downloads/icdar/icdar-test13', '*.{}'.format(ext))))
     return files
 
 def handleFile(p):
@@ -28,8 +28,11 @@ def handleFile(p):
             l = l.replace('\n', '')
             line1 = l.split()
             line2 = l.split(', ')
+            line3 = l.split(',')
             if len(line2) >= 5 :
                 line = line2
+            elif len(line3) >= 5 :
+                line = line3
             else :
                 line = line1
 
