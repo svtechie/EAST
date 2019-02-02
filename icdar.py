@@ -38,13 +38,13 @@ tf.app.flags.DEFINE_string('geometry', 'RBOX',
 
 
 FLAGS = tf.app.flags.FLAGS
-genImages = False
+genImages = True
 im_fn = ''
 
-basePath = [#"downloads/icdar-training15/",
-            #"downloads/icdar-training13/",
-            #"downloads/icdar-test15/",
-            #"downloads/icdar-test13/",
+basePath = ["downloads/icdar-training15/",
+            "downloads/icdar-training13/",
+            "downloads/icdar-test15/",
+            "downloads/icdar-test13/",
             "downloads/hmsi_data01/",
             "downloads/MSRA-TD500/train/",
             "downloads/MSRA-TD500/test/"
@@ -812,19 +812,20 @@ def generator(input_size=512, batch_size=32,
                     plt.show()
                     plt.close()
 
-                images.append(im[:, :, ::-1].astype(np.float32))
-                image_fns.append(im_fn)
-                score_maps.append(score_map[::4, ::4, np.newaxis].astype(np.float32))
-                geo_maps.append(geo_map[::4, ::4, :].astype(np.float32))
-                training_masks.append(training_mask[::4, ::4, np.newaxis].astype(np.float32))
+                if not genImages :
+                    images.append(im[:, :, ::-1].astype(np.float32))
+                    image_fns.append(im_fn)
+                    score_maps.append(score_map[::4, ::4, np.newaxis].astype(np.float32))
+                    geo_maps.append(geo_map[::4, ::4, :].astype(np.float32))
+                    training_masks.append(training_mask[::4, ::4, np.newaxis].astype(np.float32))
 
-                if len(images) == batch_size:
-                    yield images, image_fns, score_maps, geo_maps, training_masks
-                    images = []
-                    image_fns = []
-                    score_maps = []
-                    geo_maps = []
-                    training_masks = []
+                    if len(images) == batch_size:
+                        yield images, image_fns, score_maps, geo_maps, training_masks
+                        images = []
+                        image_fns = []
+                        score_maps = []
+                        geo_maps = []
+                        training_masks = []
             except Exception as e:
                 import traceback
                 traceback.print_exc()
@@ -855,9 +856,6 @@ def get_batch(num_workers, **kwargs):
 
 
 if __name__ == '__main__':
-    if genImages :
-        data_generator = generator(input_size=512, batch_size=10)
-    else :
-        data_generator = get_batch(num_workers=1, input_size=512, batch_size=1)
-        #for i in range(100) :
+    data_generator = get_batch(num_workers=1, input_size=512, batch_size=1)
+    for i in range(100) :
         data = next(data_generator)
